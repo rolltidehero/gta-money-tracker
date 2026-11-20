@@ -1,0 +1,56 @@
+# Unattended refresh every four hours.
+name: Four-hour refresh
+on:
+  schedule:
+    - cron: '53 */4 * * *'   # every four hours at minute 53 (UTC)
+  workflow_dispatch: {}     # lets you run it by hand from the Actions tab
+permissions:
+  contents: write           # commit and push the rebuilt files
+  issues: write             # open a review issue when the page watch finds something
+  pages: write              # ask GitHub Pages to rebuild after a push
+concurrency:
+  group: tracker-refresh
+  cancel-in-progress: false
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history so the commit count is right
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          echo "TRACKER_OUT_DIR=$RUNNER_TEMP/tracker-out" >> "$GITHUB_ENV"
+          mkdir -p "$RUNNER_TEMP/tracker-out"
+      - name: Run the tracker script (--auto)
+        id: run
+        run: |
+          before=$(git rev-parse HEAD)
+          node update-tracker.js --auto
+          after=$(git rev-parse HEAD)
+          if [ "$before" != "$after" ]; then echo "pushed=true" >> "$GITHUB_OUTPUT"; fi
+      - name: Rebuild GitHub Pages after a push
+        if: steps.run.outputs.pushed == 'true'
+        continue-on-error: true
+        run: gh api -X POST "repos/${{ github.repository }}/pages/builds" --silent
+      - name: Open an issue for anything the watch found
+        if: always()
+        continue-on-error: true
+        run: |
+          f="$TRACKER_OUT_DIR/gta6_tracker_watch.json"
+          [ -f "$f" ] || exit 0
+          jq -c '.alerts[]?' "$f" | while read -r a; do
+            title=$(echo "$a" | jq -r .title)
+            body=$(echo "$a" | jq -r .body)
+            if [ -z "$(gh issue list --state all --search "\"$title\" in:title" --json number --jq '.[0].number')" ]; then
+              gh issue create --title "$title" --body "$body"
+            fi
+          done
