@@ -6,7 +6,7 @@
 
   var DATA = {
     "meta": {
-      "asOf": "November 20, 2026",
+      "asOf": "November 21, 2026",
       "build": "1.002.001",
       "platformsLive": "PS5, Xbox Series X|S",
       "buildNote": "Shipped before launch",
