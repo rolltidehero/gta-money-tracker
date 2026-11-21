@@ -33,7 +33,7 @@
        node update-tracker.js --no-push       Commit but do not push to GitHub
        node update-tracker.js --message "Mark M-05 as verified"   Custom commit subject
        node update-tracker.js --compact       Shorter progress output
-       node update-tracker.js --auto          Unattended run (used by the four-hour GitHub workflow):
+       node update-tracker.js --auto          Unattended run (used by the 15-minute GitHub workflow):
                                               refresh cars, rebuild, commit, push, watch public pages
        node update-tracker.js --watch         Also run the public-page watch (step 13) by hand
        node update-tracker.js --sync-sources  Copy shared source edits into both sibling apps,
@@ -41,9 +41,9 @@
                                               Add keys to also copy new ones: --sync-sources key1,key2
        node update-tracker.js --help          Show this help
 
-   RUNNING WITHOUT ANYONE (every four hours)
+   RUNNING WITHOUT ANYONE (every 15 minutes)
    -------------------------------
-   .github/workflows/refresh.yml runs "node update-tracker.js --auto" every four hours on GitHub's
+   .github/workflows/refresh.yml runs "node update-tracker.js --auto" every 15 minutes on GitHub's
    own servers, so nothing has to be open on any computer. The script refreshes the car values
    from IGN, stamps the date, rebuilds, commits and pushes only when something changed, and
    asks GitHub Pages to rebuild. What it cannot do alone is judge a new glitch write-up, so

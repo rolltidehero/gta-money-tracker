@@ -12,7 +12,9 @@ The same script runs in all three repos and uses `meta.repo` to identify the app
 
 ## Automatic refresh
 
-GitHub Actions runs every four hours at minute 53 UTC. The workflow builds and updates the site, then checks the duplication-claim watch for items that need review. The watch cannot verify a claim on its own.
+GitHub Actions schedules a refresh every 15 minutes at :13, :28, :43 and :58 UTC. The workflow builds and updates the site, then checks the duplication-claim watch for items that need review. The watch cannot verify a claim on its own.
+
+The header shows when the update-script step last finished, in Central Time, even if there was no new commit.
 
 ## RSS and version
 
