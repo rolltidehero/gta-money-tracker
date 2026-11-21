@@ -27,8 +27,8 @@
        node update-tracker.js --check-links   Also test every source URL (slower)
        node update-tracker.js --refresh-cars  Also pull the newest car values from IGN's vehicle table
        node update-tracker.js --build 1.003.000   Record a new game build number
-       node update-tracker.js --as-of "November 25, 2026"   Set the "Checked" date by hand
-       node update-tracker.js --no-stamp      Keep the "Checked" date as it is
+       node update-tracker.js --as-of "November 25, 2026"   Override the data date without inventing a time
+       node update-tracker.js --no-stamp      Keep the data date and time as they are
        node update-tracker.js --no-commit     Rebuild but do not make a git commit
        node update-tracker.js --no-push       Commit but do not push to GitHub
        node update-tracker.js --message "Mark M-05 as verified"   Custom commit subject
@@ -371,8 +371,8 @@ function writeAtomic(file, text) {
   }
 }
 
-function todayLabel() {
-  return new Intl.DateTimeFormat('en-US', { timeZone: TIMEZONE, year: 'numeric', month: 'long', day: 'numeric' }).format(new Date());
+function dateLabel(date) {
+  return new Intl.DateTimeFormat('en-US', { timeZone: TIMEZONE, year: 'numeric', month: 'long', day: 'numeric' }).format(date);
 }
 
 /* Replaces {build} and {asOf} in every string of a value (deep). */
@@ -651,6 +651,13 @@ function validate(data) {
 
   /* meta */
   (hasEntries ? ['asOf', 'build', 'platformsLive'] : ['asOf', 'platformsLive']).forEach((k) => { if (!filled(data.meta[k])) err('meta.' + k, 'must be a non-empty text'); });
+  if (data.meta.asOfAt !== undefined) {
+    const date = new Date(typeof data.meta.asOfAt === 'string' ? data.meta.asOfAt : NaN);
+    if (!Number.isFinite(date.getTime()) ||
+        date.toISOString() !== data.meta.asOfAt || dateLabel(date) !== data.meta.asOf) {
+      err('meta.asOfAt', 'must be an ISO timestamp that matches meta.asOf in Central Time (or omit it)');
+    }
+  }
 
   /* sources */
   const sourceKeys = Object.keys(data.sources);
@@ -1081,6 +1088,7 @@ function renderDataJs(resolved, app) {
    Step 8: change report
    --------------------------------------------------------------------------- */
 function same(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
+function isContentMeta(change) { return change.field !== 'asOf' && change.field !== 'asOfAt'; }
 
 function buildReport(previous, current, options) {
   const report = {
@@ -1164,8 +1172,8 @@ function buildReport(previous, current, options) {
     if (!same(previous[pair[0]] === undefined ? (pair[0] === 'sources' ? {} : []) : previous[pair[0]], current[pair[0]])) report.otherSectionsChanged.push(pair[1]);
   });
 
-  const onlyDate = report.metaChanges.length === 1 && report.metaChanges[0].field === 'asOf';
-  report.hasContentChanges = report.added.length + report.removed.length + report.changed.length + report.otherSectionsChanged.length > 0 || (report.metaChanges.length > 0 && !onlyDate);
+  report.hasContentChanges = report.added.length + report.removed.length + report.changed.length + report.otherSectionsChanged.length > 0 ||
+    report.metaChanges.some(isContentMeta);
   report.hasChanges = report.hasContentChanges || report.metaChanges.length > 0;
   return report;
 }
@@ -1204,7 +1212,7 @@ function renderFeed(previousXml, report, baseRevision) {
   }
   note('Other sections updated', report.otherSectionsChanged);
   if (!changes.length && report.hasContentChanges) {
-    note('Tracker information updated', report.metaChanges.filter((m) => m.field !== 'asOf').map((m) => m.field));
+    note('Tracker information updated', report.metaChanges.filter(isContentMeta).map((m) => m.field));
   }
   const title = changes.length ? APP_NAME + ' update' : APP_NAME + ' RSS feed is live';
   const description = changes.length
@@ -1213,7 +1221,7 @@ function renderFeed(previousXml, report, baseRevision) {
   // Stable across retries of the same edit before a commit, without pinning
   // separate updates with similar summaries to the same feed ID.
   const details = [report.added, report.removed, report.changed, report.carChanges,
-    report.otherSectionsChanged, report.metaChanges.filter((m) => m.field !== 'asOf')];
+    report.otherSectionsChanged, report.metaChanges.filter(isContentMeta)];
   const id = siteUrl + '#rss-' + createHash('sha256').update(JSON.stringify([baseRevision, title, details])).digest('hex').slice(0, 24);
   if (items.some((item) => item.includes('<guid isPermaLink="false">' + escapeXml(id) + '</guid>'))) return previousXml;
 
@@ -1521,14 +1529,33 @@ async function main() {
 
     /* ---- Step 5 ---- */
     await runStep(4, (step) => {
-      const before = { asOf: data.meta.asOf, build: data.meta.build };
-      if (opts.asOf) data.meta.asOf = opts.asOf;
-      else if (opts.stamp) data.meta.asOf = todayLabel();
+      const before = { asOf: data.meta.asOf, asOfAt: data.meta.asOfAt, build: data.meta.build };
       if (opts.build && APP !== 'cars') data.meta.build = opts.build;
       else if (opts.build) info('--build is ignored here: the Car Tracker does not record a game build.');
-      info('Checked date: ' + before.asOf + (before.asOf === data.meta.asOf ? ' (unchanged)' : ' -> ' + data.meta.asOf));
+      if (opts.asOf) {
+        data.meta.asOf = opts.asOf;
+        if (before.asOf !== opts.asOf) delete data.meta.asOfAt;
+      } else if (opts.stamp) {
+        const now = new Date();
+        data.meta.asOf = dateLabel(now);
+        /* Only stamp a new day or changed snapshot. A same-day quiet run must
+           not manufacture a new data version, git commit, or RSS alert. */
+        let published = null;
+        if (hasGit) {
+          try { published = git(['show', 'HEAD:data.js'], { maxBuffer: 64 * 1024 * 1024 }); } catch (err) { /* First build. */ }
+        } else if (fs.existsSync(PATHS.dataJs)) {
+          published = readText(PATHS.dataJs, 'previous data.js');
+        }
+        if (!before.asOfAt || before.asOf !== data.meta.asOf ||
+            renderDataJs(resolveData(data), APP).trimEnd() !== (published || '').trimEnd()) {
+          data.meta.asOfAt = now.toISOString();
+        }
+      }
+      const afterLabel = data.meta.asOf + (data.meta.asOfAt ? ' (' + data.meta.asOfAt + ')' : '');
+      const dateChanged = before.asOf !== data.meta.asOf || before.asOfAt !== data.meta.asOfAt;
+      info('Data date:    ' + afterLabel + (dateChanged ? '' : ' (unchanged)'));
       if (APP !== 'cars') info('Game build:   ' + before.build + (before.build === data.meta.build ? ' (unchanged)' : ' -> ' + data.meta.build));
-      const changed = before.asOf !== data.meta.asOf || before.build !== data.meta.build;
+      const changed = dateChanged || before.build !== data.meta.build;
       if (changed && !opts.dryRun) {
         remember(PATHS.json);
         wroteFiles = true;

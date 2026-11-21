@@ -12,7 +12,8 @@
       "buildNote": "Shipped before launch",
       "platformsNote": "No PC version, no online mode",
       "patchNote": "No patch notes published",
-      "repo": "rolltidehero/gta-money-tracker"
+      "repo": "rolltidehero/gta-money-tracker",
+      "asOfAt": "2026-11-21T18:06:19.760Z"
     },
     "sources": {
       "beebomMoney": {

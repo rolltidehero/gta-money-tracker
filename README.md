@@ -15,6 +15,7 @@ The same script runs in all three repos and uses `meta.repo` to identify the app
 GitHub Actions schedules a refresh every 15 minutes at :13, :28, :43 and :58 UTC. The workflow builds and updates the site, then checks the duplication-claim watch for items that need review. The watch cannot verify a claim on its own.
 
 The header shows when the update-script step last finished, in Central Time, even if there was no new commit.
+The separate **Data date** shows when the published snapshot was stamped, also in Central Time. It advances on a new day or when the snapshot changes, not on quiet same-day runs.
 
 ## RSS and version
 

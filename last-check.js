@@ -4,7 +4,26 @@
   'use strict';
 
   var anchor = document.getElementById('last-check');
-  var repo = window.TRACKER && window.TRACKER.meta && window.TRACKER.meta.repo;
+  var meta = window.TRACKER && window.TRACKER.meta;
+  var repo = meta && meta.repo;
+  var format = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Chicago', month: 'short', day: 'numeric', year: 'numeric',
+    hour: 'numeric', minute: '2-digit', second: '2-digit', timeZoneName: 'short',
+  });
+  function makeTime(when) {
+    var time = document.createElement('time');
+    time.dateTime = when.toISOString();
+    time.textContent = format.format(when);
+    return time;
+  }
+
+  /* The snapshot timestamp is stored with the data and works without the API.
+     Older snapshots with no precise time keep the existing date-only label. */
+  var dataDate = document.getElementById('asof-date');
+  var snapshot = new Date(meta && meta.asOfAt);
+  if (dataDate && meta && meta.asOfAt && Number.isFinite(snapshot.getTime())) {
+    dataDate.replaceChildren(makeTime(snapshot));
+  }
   if (!anchor || !/^[a-z0-9-]+\/[a-z0-9-]+$/i.test(repo || '')) return;
 
   var controller = new AbortController();
@@ -30,15 +49,9 @@
         if (!step) continue;
         const when = new Date(step.completed_at);
         if (!Number.isFinite(when.getTime())) continue;
-        const time = document.createElement('time');
-        time.dateTime = when.toISOString();
-        time.textContent = new Intl.DateTimeFormat('en-US', {
-          timeZone: 'America/Chicago', month: 'short', day: 'numeric', year: 'numeric',
-          hour: 'numeric', minute: '2-digit', second: '2-digit', timeZoneName: 'short',
-        }).format(when);
         anchor.href = 'https://github.com/' + repo + '/actions/runs/' + run.id +
           (Number.isSafeInteger(job.id) ? '/job/' + job.id + '#step:' + step.number + ':1' : '');
-        anchor.replaceChildren(time);
+        anchor.replaceChildren(makeTime(when));
         if (step.conclusion !== 'success') {
           const status = { failure: 'failed', cancelled: 'cancelled', timed_out: 'timed out' };
           anchor.append(' (' + status[step.conclusion] + ')');
