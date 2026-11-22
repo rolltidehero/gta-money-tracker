@@ -15,8 +15,13 @@
     if (label) label.textContent = isLight ? 'Dark mode' : 'Light mode';
   }
 
+  /* A first-party preference cookie works across the three GitHub Pages paths.
+     Sandboxed previews may block cookies, so the switch also works in memory. */
   var saved;
-  try { saved = window.localStorage.getItem(key); } catch (err) { /* Storage may be blocked. */ }
+  try {
+    var match = document.cookie.match(/(?:^|;\s*)gta-vi-tracker-theme=(light|dark)(?:;|$)/);
+    if (match) saved = match[1];
+  } catch (err) { /* Preference cookies may be blocked. */ }
   apply(saved);
 
   document.addEventListener('DOMContentLoaded', function () {
@@ -28,11 +33,9 @@
     button.addEventListener('click', function () {
       var value = root.dataset.theme === 'light' ? 'dark' : 'light';
       apply(value);
-      try { window.localStorage.setItem(key, value); } catch (err) { /* Still applies on this page. */ }
+      try {
+        document.cookie = key + '=' + value + '; Path=/; Max-Age=31536000; SameSite=Lax; Secure';
+      } catch (err) { /* Still applies on this page. */ }
     });
-  });
-
-  window.addEventListener('storage', function (event) {
-    if (event.key === key || event.key === null) apply(event.newValue);
   });
 })();
