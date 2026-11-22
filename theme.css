@@ -1,0 +1,104 @@
+/* Shared GTA VI-inspired palette. Loaded after the component styles. */
+:root {
+  color-scheme: dark;
+  --color-bg: #120e1b;
+  --color-surface: #1e162b;
+  --color-surface-offset: #2c203b;
+  --color-divider: #3c2c4e;
+  --color-border: #846896;
+  --color-text: #fff1f9;
+  --color-text-muted: #cfb9d5;
+  --color-text-inverse: #201029;
+  --color-primary: #ff9bce;
+  --color-primary-hover: #ffc0a9;
+  --color-primary-tint: #392038;
+  --tone-pos-bg: #173730;
+  --tone-pos-fg: #8af0c9;
+  --tone-warn-bg: #423123;
+  --tone-warn-fg: #ffd28f;
+  --tone-neg-bg: #442137;
+  --tone-neg-fg: #ffadd3;
+  --tone-neutral-bg: #362748;
+  --tone-neutral-fg: #e2caef;
+  --shadow-sm: 0 1px 3px #08050d66;
+  --hero-from: #2e1e48;
+  --hero-mid: #2c1833;
+  --hero-to: #372224;
+  --hero-border: #563b67;
+  --hero-heading: #ffd0e7;
+  --sunset: linear-gradient(110deg, #bca0ff 0%, #fa8dca 52%, #ffc287 100%);
+  --brand-ink: #291138;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  --color-bg: #fff4f5;
+  --color-surface: #fffbfd;
+  --color-surface-offset: #f6e6f4;
+  --color-divider: #e9d1e5;
+  --color-border: #a17b99;
+  --color-text: #321b37;
+  --color-text-muted: #694c69;
+  --color-text-inverse: #fff7fb;
+  --color-primary: #8e285f;
+  --color-primary-hover: #702047;
+  --color-primary-tint: #fce2ef;
+  --tone-pos-bg: #e1f5ed;
+  --tone-pos-fg: #155344;
+  --tone-warn-bg: #ffedd4;
+  --tone-warn-fg: #71421b;
+  --tone-neg-bg: #ffe3ed;
+  --tone-neg-fg: #85264e;
+  --tone-neutral-bg: #efe3f6;
+  --tone-neutral-fg: #563969;
+  --shadow-sm: 0 1px 3px #471f3114;
+  --hero-from: #f0e2ff;
+  --hero-mid: #fde3f1;
+  --hero-to: #ffdfcb;
+  --hero-border: #e0bfdc;
+  --hero-heading: #56244f;
+}
+
+.masthead {
+  background:
+    var(--sunset) top / 100% 3px no-repeat,
+    linear-gradient(115deg, var(--hero-from), var(--hero-mid) 55%, var(--hero-to));
+  border: 1px solid var(--hero-border);
+  border-radius: var(--radius-lg);
+  padding: clamp(var(--space-4), 3vw, var(--space-8));
+}
+
+.masthead h1 { color: var(--hero-heading); }
+.brand svg {
+  background: var(--sunset);
+  border-radius: 22%;
+}
+.brand svg rect { fill: none; }
+.brand svg path { stroke: var(--brand-ink); }
+
+.theme-toggle:not([hidden]) {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: 0 var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  color: var(--color-text);
+  background: var(--color-surface);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  white-space: nowrap;
+}
+.theme-toggle:hover {
+  border-color: var(--color-primary);
+  background: var(--color-surface-offset);
+}
+.theme-toggle svg { color: var(--color-primary); }
+.theme-toggle .theme-moon,
+:root[data-theme='light'] .theme-toggle .theme-sun { display: none; }
+:root[data-theme='light'] .theme-toggle .theme-moon { display: block; }
+
+@media (min-width: 64rem) {
+  .theme-toggle { margin-inline-start: auto; }
+}
