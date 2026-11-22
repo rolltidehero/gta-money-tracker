@@ -6,13 +6,16 @@
   var root = document.documentElement;
   var chrome = document.querySelector('meta[name="theme-color"]');
   var button;
-  var label;
 
   function apply(value) {
     var isLight = value === 'light';
     root.dataset.theme = isLight ? 'light' : 'dark';
     if (chrome) chrome.content = isLight ? '#fff4f5' : '#120e1b';
-    if (label) label.textContent = isLight ? 'Dark mode' : 'Light mode';
+    if (button) {
+      var action = isLight ? 'Dark mode' : 'Light mode';
+      button.setAttribute('aria-label', action);
+      button.title = action;
+    }
   }
 
   /* A first-party preference cookie works across the three GitHub Pages paths.
@@ -27,7 +30,6 @@
   document.addEventListener('DOMContentLoaded', function () {
     button = document.getElementById('theme-toggle');
     if (!button) return;
-    label = button.querySelector('.theme-label');
     apply(root.dataset.theme);
     button.hidden = false;
     button.addEventListener('click', function () {

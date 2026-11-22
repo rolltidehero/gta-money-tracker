@@ -76,29 +76,39 @@
 .brand svg rect { fill: none; }
 .brand svg path { stroke: var(--brand-ink); }
 
-.theme-toggle:not([hidden]) {
-  display: inline-flex;
+.nav-tools {
+  display: flex;
   align-items: center;
-  gap: var(--space-2);
-  min-height: 44px;
-  padding: 0 var(--space-4);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-full);
-  color: var(--color-text);
-  background: var(--color-surface);
-  font-size: var(--text-sm);
-  font-weight: 700;
-  white-space: nowrap;
 }
-.theme-toggle:hover {
+.nav-tools > :not([hidden]) {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  color: var(--color-primary);
+}
+/* A 34px visible circle inside a 44px tap target. */
+.nav-tools > :not([hidden])::before {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  pointer-events: none;
+  border: 1px solid var(--color-border);
+  border-radius: inherit;
+  background: var(--color-surface);
+}
+.nav-tools > :hover::before,
+.nav-tools > :focus-visible::before {
   border-color: var(--color-primary);
   background: var(--color-surface-offset);
 }
-.theme-toggle svg { color: var(--color-primary); }
+.nav-tools svg { position: relative; }
 .theme-toggle .theme-moon,
 :root[data-theme='light'] .theme-toggle .theme-sun { display: none; }
 :root[data-theme='light'] .theme-toggle .theme-moon { display: block; }
 
 @media (min-width: 64rem) {
-  .theme-toggle { margin-inline-start: auto; }
+  .nav-tools { margin-inline-start: auto; }
 }
