@@ -6,14 +6,14 @@
 
   var DATA = {
     "meta": {
-      "asOf": "November 24, 2026",
+      "asOf": "November 25, 2026",
       "build": "1.002.001",
       "platformsLive": "PS5, Xbox Series X|S",
       "buildNote": "Shipped before launch",
       "platformsNote": "No PC version, no online mode",
       "patchNote": "No patch notes published",
       "repo": "rolltidehero/gta-money-tracker",
-      "asOfAt": "2026-11-24T11:11:09.935Z"
+      "asOfAt": "2026-11-25T14:16:26.166Z"
     },
     "sources": {
       "beebomMoney": {
