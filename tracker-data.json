@@ -1,13 +1,13 @@
 {
   "meta": {
-    "asOf": "November 26, 2026",
+    "asOf": "November 27, 2026",
     "build": "1.002.001",
     "platformsLive": "PS5, Xbox Series X|S",
     "buildNote": "Shipped before launch",
     "platformsNote": "No PC version, no online mode",
     "patchNote": "No patch notes published",
     "repo": "rolltidehero/gta-money-tracker",
-    "asOfAt": "2026-11-26T15:06:20.729Z"
+    "asOfAt": "2026-11-27T15:34:20.024Z"
   },
   "defaults": {
     "ps5": "Unspecified",
